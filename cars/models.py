@@ -286,8 +286,10 @@ class Sale(models.Model):
 
     def save(self, *args, **kwargs):
         self.profit = self.sale_price - self.car.purchase_price
+
         self.car.status = 'vendido'
-        self.car.save()
+        self.car.save(update_fields=['status'])
+
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -58,23 +58,29 @@ def car_delete(request, pk):
     })
 
 def dashboard(request):
-    carros = Car.objects.all()
-    carros_venda = Car.objects.filter(status='estoque')
-    vendas = Sale.objects.all()
+    carros_estoque = Car.objects.filter(
+        status='estoque',
+        sales__isnull=True
+    ).distinct()
+
+    vendas = Sale.objects.select_related('car').all()
 
     context = {
-        'carros_venda': carros_venda.count(),
+        'carros_venda': carros_estoque.count(),
         'carros_vendidos': vendas.count(),
-        'total_investido': carros_venda.aggregate(Sum('purchase_price'))['purchase_price__sum'] or 0,
+        'total_investido': carros_estoque.aggregate(Sum('purchase_price'))['purchase_price__sum'] or 0,
         'lucro_total': vendas.aggregate(Sum('profit'))['profit__sum'] or 0,
-        'carros': carros_venda.order_by('-id')[:5],
+        'carros': carros_estoque.order_by('-id')[:5],
     }
 
     return render(request, 'cars/dashboard.html', context)
-    return render(request, 'cars/dashboard.html', context)
 
 def cars_list(request):
-    cars = Car.objects.filter(status='estoque').order_by('-id')
+    cars = Car.objects.filter(
+        status='estoque',
+        sales__isnull=True
+    ).distinct().order_by('-id')
+
     return render(request, 'cars/cars_list.html', {'cars': cars})
 
 
@@ -164,12 +170,16 @@ def document_create(request):
 def inventory_view(request):
     cars = Car.objects.all().order_by('-id')
 
-    cars_in_stock = cars.filter(status='estoque')
-    cars_for_sale = cars.filter(status='estoque')
+    cars_in_stock = Car.objects.filter(
+        status='estoque',
+        sales__isnull=True
+    ).distinct().order_by('-id')
 
-    total_inventory = cars.count()
-    total_investment = cars.aggregate(Sum('purchase_price'))['purchase_price__sum'] or 0
-    estimated_value = cars.aggregate(Sum('fipe_current_price'))['fipe_current_price__sum'] or 0
+    cars_for_sale = cars_in_stock
+
+    total_inventory = cars_in_stock.count()
+    total_investment = cars_in_stock.aggregate(Sum('purchase_price'))['purchase_price__sum'] or 0
+    estimated_value = cars_in_stock.aggregate(Sum('fipe_current_price'))['fipe_current_price__sum'] or 0
 
     estimated_margin = estimated_value - total_investment
 
@@ -179,7 +189,7 @@ def inventory_view(request):
         margin_percentage = 0
 
     context = {
-        'cars': cars,
+        'cars': cars_in_stock,
         'cars_in_stock': cars_in_stock,
         'cars_for_sale': cars_for_sale,
         'total_inventory': total_inventory,
