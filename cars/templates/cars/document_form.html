@@ -2,193 +2,198 @@
 
 {% block content %}
 
-<div class="modal-overlay">
-    <div class="document-modal">
-
-        <div class="modal-header">
-            <h1>Adicionar Documento</h1>
-
-            <a href="{% url 'documentation_list' %}" class="close-button">×</a>
-        </div>
-
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-
-            <div class="field">
-                <label>Carro *</label>
-                {{ form.car }}
-            </div>
-
-            <div class="field">
-                <label>Tipo de Documento *</label>
-                {{ form.document_type }}
-            </div>
-
-            <div class="field">
-                <label>Nome do Documento *</label>
-                {{ form.name }}
-            </div>
-
-            <div class="field">
-                <label>Fotos do Documento</label>
-                {{ form.images }}
-                <small>Você pode selecionar várias imagens ao mesmo tempo.</small>
-            </div>
-
-            <div class="field">
-                <label>Observações</label>
-                {{ form.notes }}
-            </div>
-
-            <div class="note-box">
-                📌 Nota: você pode enviar múltiplas fotos do mesmo documento ou de documentos relacionados ao veículo.
-            </div>
-
-            <div class="modal-actions">
-                <button type="submit" class="primary-button">
-                    Adicionar
-                </button>
-
-                <a href="{% url 'documentation_list' %}" class="secondary-button">
-                    Cancelar
-                </a>
-            </div>
-        </form>
-
+<div class="page-header">
+    <div>
+        <h1>Adicionar Documento</h1>
+        <p>Envie documentos e imagens vinculados a um veículo</p>
     </div>
+
+    <a href="{% url 'documentation_list' %}" class="secondary-action">
+        Voltar
+    </a>
 </div>
 
+<section class="form-card">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="error-box">
+                <strong>Erro ao salvar o documento:</strong>
+                {{ form.errors }}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label>Carro *</label>
+            {{ form.car }}
+            {{ form.car.errors }}
+        </div>
+
+        <div class="form-group">
+            <label>Tipo de Documento *</label>
+            {{ form.document_type }}
+            {{ form.document_type.errors }}
+        </div>
+
+        <div class="form-group">
+            <label>Nome do Documento *</label>
+            {{ form.name }}
+            {{ form.name.errors }}
+        </div>
+
+        <div class="form-group">
+            <label>Fotos do Documento</label>
+            {{ form.images }}
+            {{ form.images.errors }}
+            <small>Você pode selecionar uma ou várias imagens ao mesmo tempo.</small>
+        </div>
+
+        <div class="form-group">
+            <label>Observações</label>
+            {{ form.notes }}
+            {{ form.notes.errors }}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="submit-button">
+                Salvar Documento
+            </button>
+
+            <a href="{% url 'documentation_list' %}" class="cancel-button">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</section>
+
 <style>
-    .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.45);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 50;
-        padding: 32px;
-        box-sizing: border-box;
-    }
-
-    .document-modal {
-        width: 512px;
-        max-width: 100%;
-        background: white;
-        border-radius: 10px;
-        padding: 20px 24px 24px 24px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
-        box-sizing: border-box;
-    }
-
-    .modal-header {
+    .page-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 14px;
+        align-items: flex-start;
+        margin-bottom: 28px;
     }
 
-    .modal-header h1 {
+    .page-header h1 {
         margin: 0;
-        font-size: 21px;
+        font-size: 32px;
         font-weight: 800;
         color: #111827;
     }
 
-    .close-button {
-        color: #555;
-        font-size: 24px;
+    .page-header p {
+        margin: 6px 0 0 0;
+        color: #667085;
+        font-size: 17px;
+    }
+
+    .secondary-action {
+        background: #ffffff;
+        color: #111827;
         text-decoration: none;
-        line-height: 1;
-    }
-
-    .field {
-        margin-bottom: 14px;
-    }
-
-    .field label {
-        display: block;
-        font-size: 14px;
-        color: #111827;
-        margin-bottom: 4px;
-    }
-
-    input,
-    select,
-    textarea {
-        width: 100%;
-        border: none;
-        background: #f0f0f2;
+        padding: 10px 16px;
         border-radius: 8px;
-        padding: 0 12px;
-        font-size: 15px;
+        font-size: 14px;
+        font-weight: 600;
+        border: 1px solid #e5e7eb;
+    }
+
+    .form-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 24px;
+        max-width: 720px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
         color: #111827;
+        font-size: 14px;
+    }
+
+    .form-group small {
+        display: block;
+        margin-top: 6px;
+        color: #667085;
+        font-size: 12px;
+    }
+
+    .form-control,
+    .textarea-control {
+        width: 100%;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 11px 12px;
+        font-size: 14px;
         box-sizing: border-box;
-        outline: none;
-        font-family: Arial, sans-serif;
     }
 
-    input,
-    select {
-        height: 36px;
-    }
-
-    input[type="file"] {
-        height: auto;
-        padding: 10px 12px;
-    }
-
-    textarea {
-        min-height: 78px;
-        padding-top: 10px;
+    .textarea-control {
+        min-height: 110px;
         resize: vertical;
     }
 
-    .field small {
-        display: block;
-        color: #667085;
-        font-size: 13px;
-        margin-top: 6px;
-    }
-
-    .note-box {
-        background: #eaf2ff;
-        color: #1e40af;
+    input[type="file"] {
+        width: 100%;
+        border: 1px dashed #cbd5e1;
+        background: #f8fafc;
         border-radius: 8px;
-        padding: 14px;
-        font-size: 15px;
-        line-height: 1.4;
-        margin: 16px 0;
-    }
-
-    .modal-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-top: 18px;
-    }
-
-    .primary-button {
-        height: 36px;
-        background: #050516;
-        color: white;
-        border: none;
-        border-radius: 7px;
-        font-size: 15px;
+        padding: 12px;
+        box-sizing: border-box;
         cursor: pointer;
     }
 
-    .secondary-button {
-        height: 36px;
-        border: 1px solid #e5e7eb;
-        border-radius: 7px;
-        color: #111827;
-        text-decoration: none;
+    .form-actions {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        background: white;
-        font-size: 15px;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .submit-button {
+        background: #020617;
+        color: #ffffff;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .cancel-button {
+        background: #ffffff;
+        color: #111827;
+        border: 1px solid #e5e7eb;
+        text-decoration: none;
+        padding: 12px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .error-box {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .errorlist {
+        margin: 6px 0 0 0;
+        padding-left: 18px;
+        color: #dc2626;
+        font-size: 13px;
     }
 </style>
 

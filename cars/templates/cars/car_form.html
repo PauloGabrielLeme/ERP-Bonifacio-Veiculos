@@ -23,6 +23,13 @@
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
 
+{% if form.errors %}
+    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+        <strong>Erro ao salvar o carro:</strong>
+        {{ form.errors }}
+    </div>
+{% endif %}
+
     <!-- ABA BÁSICO -->
     <div class="tab-content active" id="basico">
 

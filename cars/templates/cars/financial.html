@@ -10,12 +10,22 @@
 </div>
 
 <div class="tabs">
-    <a href="{% url 'financial' %}?tab=ipva" class="{% if active_tab == 'ipva' %}active{% endif %}">▰ IPVA</a>
-    <a href="{% url 'financial' %}?tab=invoices" class="{% if active_tab == 'invoices' %}active{% endif %}">▣ Notas Fiscais</a>
-    <a href="{% url 'financial' %}?tab=contracts" class="{% if active_tab == 'contracts' %}active{% endif %}">▤ Contratos</a>
+    <a href="{% url 'financial' %}?tab=ipva" class="{% if active_tab == 'ipva' %}active{% endif %}">
+        ▰ IPVA
+    </a>
+
+    <a href="{% url 'financial' %}?tab=invoices" class="{% if active_tab == 'invoices' %}active{% endif %}">
+        ▣ Notas Fiscais
+    </a>
+
+    <a href="{% url 'financial' %}?tab=contracts" class="{% if active_tab == 'contracts' %}active{% endif %}">
+        ▤ Contratos
+    </a>
 </div>
 
+
 {% if active_tab == 'ipva' %}
+
     <div class="actions-row">
         <button type="button" class="primary-button" onclick="openIpvaModal()">
             Adicionar IPVA
@@ -41,10 +51,16 @@
                 <tbody>
                     {% for ipva in ipvas %}
                         <tr>
-                            <td>{{ ipva.car.brand }} {{ ipva.car.model }} - {{ ipva.car.plate }}</td>
+                            <td>
+                                {{ ipva.car.brand }} {{ ipva.car.model }} - {{ ipva.car.plate }}
+                            </td>
+
                             <td>{{ ipva.year }}</td>
+
                             <td>{{ ipva.installments }}x</td>
+
                             <td>R$ {{ ipva.total_value }}</td>
+
                             <td>
                                 {% if ipva.discount_value > 0 %}
                                     R$ {{ ipva.discount_value }}
@@ -53,8 +69,13 @@
                                     —
                                 {% endif %}
                             </td>
-                            <td><strong>R$ {{ ipva.final_value }}</strong></td>
+
+                            <td>
+                                <strong>R$ {{ ipva.final_value }}</strong>
+                            </td>
+
                             <td>R$ {{ ipva.installment_value }}</td>
+
                             <td>{{ ipva.observations|default:"—" }}</td>
                         </tr>
                     {% endfor %}
@@ -72,12 +93,23 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Registrar IPVA</h2>
-                <button type="button" onclick="closeIpvaModal()">×</button>
+
+                <button type="button" onclick="closeIpvaModal()">
+                    ×
+                </button>
             </div>
 
             <form method="post">
                 {% csrf_token %}
+
                 <input type="hidden" name="action" value="create_ipva">
+
+                {% if ipva_form.errors %}
+                    <div class="error-box">
+                        <strong>Erro ao salvar o IPVA:</strong>
+                        {{ ipva_form.errors }}
+                    </div>
+                {% endif %}
 
                 <div class="form-group">
                     <label>Carro *</label>
@@ -103,7 +135,9 @@
                     <label>Valor Total (R$) *</label>
                     {{ ipva_form.total_value }}
                     {{ ipva_form.total_value.errors }}
-                    <small>Se selecionar 1x, o desconto de 3% será calculado automaticamente.</small>
+                    <small>
+                        Se selecionar 1x, o desconto de 3% será calculado automaticamente.
+                    </small>
                 </div>
 
                 <div class="form-group">
@@ -113,31 +147,275 @@
                 </div>
 
                 <div class="modal-actions">
-                    <button type="submit" class="submit-button">Registrar</button>
-                    <button type="button" class="cancel-button" onclick="closeIpvaModal()">Cancelar</button>
+                    <button type="submit" class="submit-button">
+                        Registrar
+                    </button>
+
+                    <button type="button" class="cancel-button" onclick="closeIpvaModal()">
+                        Cancelar
+                    </button>
                 </div>
             </form>
         </div>
     </div>
+
+
 {% elif active_tab == 'invoices' %}
+
     <div class="actions-row">
-        <button type="button" class="primary-button">Gerar Nota Fiscal</button>
+        <form method="get" class="filter-form">
+            <input type="hidden" name="tab" value="invoices">
+
+            <select name="invoice_car" class="form-control" onchange="this.form.submit()">
+                <option value="">Todos os carros</option>
+
+                {% for car in cars %}
+                    <option value="{{ car.id }}" {% if invoice_selected_car == car.id|stringformat:"s" %}selected{% endif %}>
+                        {{ car.brand }} {{ car.model }} - {{ car.plate }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+
+        <button type="button" class="primary-button" onclick="openInvoiceModal()">
+            Gerar Nota Fiscal
+        </button>
     </div>
 
-    <section class="table-card">
-        <div class="empty-box">
-            <div class="empty-icon">▣</div>
-            <p>Nenhuma nota fiscal emitida</p>
-        </div>
+    <section class="invoice-grid">
+        {% if invoice_documents %}
+            {% for invoice in invoice_documents %}
+                <a href="{% url 'invoice_document_detail' invoice.id %}" class="invoice-card">
+                    <div class="invoice-icon">
+                        {% if invoice.file_type == 'docx' %}
+                            DOCX
+                        {% else %}
+                            TXT
+                        {% endif %}
+                    </div>
+
+                    <div class="invoice-info">
+                        <h3>{{ invoice.title }}</h3>
+
+                        <p>
+                            {{ invoice.car.brand }} {{ invoice.car.model }} - {{ invoice.car.plate }}
+                        </p>
+
+                        <small>
+                            {{ invoice.get_file_type_display }} · {{ invoice.created_at|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                </a>
+            {% endfor %}
+        {% else %}
+            <div class="empty-box full-width">
+                <div class="empty-icon">▣</div>
+                <p>Nenhuma nota fiscal cadastrada</p>
+            </div>
+        {% endif %}
     </section>
+
+    <div id="invoice-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Gerar Nota Fiscal</h2>
+
+                <button type="button" onclick="closeInvoiceModal()">
+                    ×
+                </button>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <input type="hidden" name="action" value="create_invoice">
+
+                {% if invoice_form.errors %}
+                    <div class="error-box">
+                        <strong>Erro ao salvar a nota fiscal:</strong>
+                        {{ invoice_form.errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label>Carro *</label>
+                    {{ invoice_form.car }}
+                    {{ invoice_form.car.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label>Título *</label>
+                    {{ invoice_form.title }}
+                    {{ invoice_form.title.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label>Texto da Nota Fiscal</label>
+                    {{ invoice_form.typed_text }}
+                    {{ invoice_form.typed_text.errors }}
+                    <small>
+                        Ao salvar, esse texto será exportado automaticamente para um arquivo .txt.
+                    </small>
+                </div>
+
+                <div class="separator">
+                    ou
+                </div>
+
+                <div class="form-group">
+                    <label>Importar arquivo .docx</label>
+                    {{ invoice_form.uploaded_docx }}
+                    {{ invoice_form.uploaded_docx.errors }}
+                    <small>
+                        Envie um arquivo .docx já pronto.
+                    </small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="submit-button">
+                        Salvar Nota Fiscal
+                    </button>
+
+                    <button type="button" class="cancel-button" onclick="closeInvoiceModal()">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
 {% elif active_tab == 'contracts' %}
-    <section class="table-card">
-        <div class="empty-box">
-            <div class="empty-icon">▤</div>
-            <p>Nenhum contrato registrado</p>
-        </div>
+
+    <div class="actions-row">
+        <form method="get" class="filter-form">
+            <input type="hidden" name="tab" value="contracts">
+
+            <select name="car" class="form-control" onchange="this.form.submit()">
+                <option value="">Todos os carros</option>
+
+                {% for car in cars %}
+                    <option value="{{ car.id }}" {% if selected_car == car.id|stringformat:"s" %}selected{% endif %}>
+                        {{ car.brand }} {{ car.model }} - {{ car.plate }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+
+        <button type="button" class="primary-button" onclick="openContractModal()">
+            Adicionar Contrato
+        </button>
+    </div>
+
+    <section class="contracts-grid">
+        {% if contracts %}
+            {% for contract in contracts %}
+                <div class="contract-card">
+                    <div class="contract-header">
+                        <div>
+                            <h3>{{ contract.name }}</h3>
+
+                            <p>
+                                {{ contract.car.brand }} {{ contract.car.model }} - {{ contract.car.plate }}
+                            </p>
+                        </div>
+
+                        <span class="contract-date">
+                            {{ contract.created_at|date:"d/m/Y" }}
+                        </span>
+                    </div>
+
+                    {% if contract.notes %}
+                        <p class="contract-notes">
+                            {{ contract.notes }}
+                        </p>
+                    {% endif %}
+
+                    <div class="contract-images">
+                        {% for image in contract.images.all %}
+                            <a href="{{ image.image.url }}" target="_blank">
+                                <img src="{{ image.image.url }}" alt="Imagem do contrato">
+                            </a>
+                        {% empty %}
+                            <div class="no-images">
+                                Nenhuma imagem enviada
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-box full-width">
+                <div class="empty-icon">▤</div>
+                <p>Nenhum contrato registrado</p>
+            </div>
+        {% endif %}
     </section>
+
+    <div id="contract-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Adicionar Contrato</h2>
+
+                <button type="button" onclick="closeContractModal()">
+                    ×
+                </button>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <input type="hidden" name="action" value="create_contract">
+
+                {% if contract_form.errors %}
+                    <div class="error-box">
+                        <strong>Erro ao salvar o contrato:</strong>
+                        {{ contract_form.errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label>Carro *</label>
+                    {{ contract_form.car }}
+                    {{ contract_form.car.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label>Nome do Contrato *</label>
+                    {{ contract_form.name }}
+                    {{ contract_form.name.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label>Fotos do Contrato</label>
+                    {{ contract_form.images }}
+                    {{ contract_form.images.errors }}
+                    <small>
+                        Você pode enviar uma ou mais imagens do contrato.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label>Observações</label>
+                    {{ contract_form.notes }}
+                    {{ contract_form.notes.errors }}
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="submit-button">
+                        Salvar Contrato
+                    </button>
+
+                    <button type="button" class="cancel-button" onclick="closeContractModal()">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 {% endif %}
+
 
 <style>
     .page-header {
@@ -184,7 +462,9 @@
 
     .actions-row {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
         margin-bottom: 20px;
     }
 
@@ -196,6 +476,11 @@
         border-radius: 8px;
         cursor: pointer;
         font-size: 14px;
+        font-weight: 600;
+    }
+
+    .primary-button:hover {
+        background: #111827;
     }
 
     .table-card {
@@ -250,11 +535,18 @@
         justify-content: center;
         gap: 10px;
         color: #667085;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
     }
 
     .empty-icon {
         font-size: 42px;
         color: #98a2b3;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
     }
 
     .modal-overlay {
@@ -272,8 +564,10 @@
     }
 
     .modal {
-        width: 500px;
+        width: 540px;
         max-width: calc(100vw - 32px);
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
         background: #ffffff;
         border-radius: 14px;
         padding: 24px;
@@ -315,6 +609,7 @@
         display: block;
         margin-bottom: 6px;
         font-size: 14px;
+        font-weight: 600;
         color: #111827;
     }
 
@@ -341,6 +636,29 @@
         resize: vertical;
     }
 
+    .invoice-textarea {
+        min-height: 160px;
+    }
+
+    input[type="file"] {
+        width: 100%;
+        border: 1px dashed #cbd5e1;
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 12px;
+        box-sizing: border-box;
+        cursor: pointer;
+    }
+
+    .error-box {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
     .errorlist {
         margin: 6px 0 0 0;
         padding-left: 18px;
@@ -362,6 +680,7 @@
         padding: 12px;
         border-radius: 8px;
         cursor: pointer;
+        font-weight: 600;
     }
 
     .cancel-button {
@@ -371,20 +690,247 @@
         padding: 12px;
         border-radius: 8px;
         cursor: pointer;
+        font-weight: 600;
+    }
+
+    .filter-form {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .filter-form select {
+        min-width: 280px;
+    }
+
+    .contracts-grid,
+    .invoice-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+        gap: 18px;
+    }
+
+    .contract-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+
+    .contract-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .contract-header h3 {
+        margin: 0;
+        font-size: 17px;
+        color: #111827;
+    }
+
+    .contract-header p {
+        margin: 4px 0 0 0;
+        color: #667085;
+        font-size: 14px;
+    }
+
+    .contract-date {
+        white-space: nowrap;
+        color: #667085;
+        font-size: 13px;
+    }
+
+    .contract-notes {
+        background: #f9fafb;
+        border-radius: 10px;
+        padding: 10px;
+        color: #374151;
+        font-size: 14px;
+        margin-bottom: 14px;
+    }
+
+    .contract-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 10px;
+    }
+
+    .contract-images a {
+        display: block;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+
+    .contract-images img {
+        width: 100%;
+        height: 90px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .no-images {
+        grid-column: 1 / -1;
+        color: #667085;
+        background: #f9fafb;
+        border-radius: 10px;
+        padding: 12px;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .invoice-card {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 18px;
+        text-decoration: none;
+        color: inherit;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+
+    .invoice-card:hover {
+        border-color: #020617;
+    }
+
+    .invoice-icon {
+        width: 54px;
+        height: 54px;
+        min-width: 54px;
+        border-radius: 12px;
+        background: #f3f4f6;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .invoice-info h3 {
+        margin: 0;
+        font-size: 17px;
+        color: #111827;
+    }
+
+    .invoice-info p {
+        margin: 4px 0;
+        color: #667085;
+        font-size: 14px;
+    }
+
+    .invoice-info small {
+        color: #667085;
+        font-size: 12px;
+    }
+
+    .separator {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #667085;
+        font-size: 13px;
+        margin: 10px 0 16px;
+    }
+
+    .separator::before,
+    .separator::after {
+        content: "";
+        height: 1px;
+        background: #e5e7eb;
+        flex: 1;
+    }
+
+    @media (max-width: 720px) {
+        .actions-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-form,
+        .filter-form select,
+        .primary-button {
+            width: 100%;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .modal-actions {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
+
 <script>
     function openIpvaModal() {
-        document.getElementById('ipva-modal').classList.add('open');
+        const modal = document.getElementById('ipva-modal');
+
+        if (modal) {
+            modal.classList.add('open');
+        }
     }
 
     function closeIpvaModal() {
-        document.getElementById('ipva-modal').classList.remove('open');
+        const modal = document.getElementById('ipva-modal');
+
+        if (modal) {
+            modal.classList.remove('open');
+        }
+    }
+
+    function openContractModal() {
+        const modal = document.getElementById('contract-modal');
+
+        if (modal) {
+            modal.classList.add('open');
+        }
+    }
+
+    function closeContractModal() {
+        const modal = document.getElementById('contract-modal');
+
+        if (modal) {
+            modal.classList.remove('open');
+        }
+    }
+
+    function openInvoiceModal() {
+        const modal = document.getElementById('invoice-modal');
+
+        if (modal) {
+            modal.classList.add('open');
+        }
+    }
+
+    function closeInvoiceModal() {
+        const modal = document.getElementById('invoice-modal');
+
+        if (modal) {
+            modal.classList.remove('open');
+        }
     }
 
     {% if ipva_form.errors %}
         openIpvaModal();
+    {% endif %}
+
+    {% if contract_form.errors %}
+        openContractModal();
+    {% endif %}
+
+    {% if invoice_form.errors %}
+        openInvoiceModal();
     {% endif %}
 </script>
 

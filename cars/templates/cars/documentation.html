@@ -5,20 +5,20 @@
 <div class="page-header">
     <div>
         <h1>Documentação</h1>
-        <p>Gestão de documentos dos veículos</p>
+        <p>Gerencie os documentos dos veículos</p>
     </div>
 
     <a href="{% url 'document_create' %}" class="primary-action">
-        ⤴ Adicionar Documento
+        + Adicionar Documento
     </a>
 </div>
 
-<section class="filter-card">
-    <form method="get">
-        <label>Filtrar por Carro</label>
+<div class="filter-card">
+    <form method="get" class="filter-form">
+        <label for="car">Filtrar por carro</label>
 
-        <select name="car" onchange="this.form.submit()">
-            <option value="">Todos os Carros</option>
+        <select name="car" id="car" class="form-control" onchange="this.form.submit()">
+            <option value="">Todos os carros</option>
 
             {% for car in cars %}
                 <option value="{{ car.id }}" {% if selected_car == car.id|stringformat:"s" %}selected{% endif %}>
@@ -27,45 +27,53 @@
             {% endfor %}
         </select>
     </form>
-</section>
+</div>
 
-<section class="documents-card">
+<section class="documents-section">
     {% if documents %}
         <div class="documents-grid">
             {% for document in documents %}
-                <div class="document-item">
-                    <div class="document-top">
+                <div class="document-card">
+                    <div class="document-header">
                         <div>
                             <h3>{{ document.name }}</h3>
-                            <p>{{ document.get_document_type_display }} • {{ document.car.brand }} {{ document.car.model }}</p>
+                            <p>{{ document.car.brand }} {{ document.car.model }} - {{ document.car.plate }}</p>
                         </div>
+
+                        <span class="document-type">
+                            {{ document.get_document_type_display }}
+                        </span>
                     </div>
 
                     {% if document.notes %}
-                        <p class="document-notes">{{ document.notes }}</p>
+                        <p class="document-notes">
+                            {{ document.notes }}
+                        </p>
                     {% endif %}
 
-                    {% if document.images.all %}
-                        <div class="image-grid">
-                            {% for image in document.images.all %}
-                                <a href="{{ image.image.url }}" target="_blank">
-                                    <img src="{{ image.image.url }}" alt="{{ document.name }}">
-                                </a>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="no-images">Nenhuma imagem enviada</p>
-                    {% endif %}
+                    <div class="document-images">
+                        {% for image in document.images.all %}
+                            <a href="{{ image.image.url }}" target="_blank">
+                                <img src="{{ image.image.url }}" alt="Imagem do documento">
+                            </a>
+                        {% empty %}
+                            <div class="no-images">
+                                Nenhuma imagem enviada
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="document-footer">
+                        Criado em {{ document.created_at|date:"d/m/Y H:i" }}
+                    </div>
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <div class="empty-state">
+        <div class="empty-box">
             <div class="empty-icon">📄</div>
-
-            <h2>Nenhum documento registrado</h2>
-
-            <p>Adicione documentos para organizar a documentação dos veículos</p>
+            <h2>Nenhum documento encontrado</h2>
+            <p>Adicione documentos dos veículos para visualizá-los aqui.</p>
 
             <a href="{% url 'document_create' %}" class="empty-button">
                 Adicionar Primeiro Documento
@@ -79,7 +87,7 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 32px;
+        margin-bottom: 28px;
     }
 
     .page-header h1 {
@@ -87,7 +95,6 @@
         font-size: 32px;
         font-weight: 800;
         color: #111827;
-        letter-spacing: -0.5px;
     }
 
     .page-header p {
@@ -97,141 +104,172 @@
     }
 
     .primary-action {
-        background: #050516;
-        color: white;
-        padding: 10px 16px;
-        border-radius: 7px;
+        background: #020617;
+        color: #ffffff;
         text-decoration: none;
-        font-size: 15px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 7px;
+        padding: 12px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
     }
 
     .filter-card {
-        background: white;
+        background: #ffffff;
         border: 1px solid #e5e7eb;
         border-radius: 14px;
-        padding: 24px;
+        padding: 18px;
         margin-bottom: 24px;
     }
 
-    .filter-card label {
-        display: block;
-        font-size: 14px;
+    .filter-form {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .filter-form label {
+        font-weight: 600;
         color: #111827;
-        margin-bottom: 4px;
     }
 
-    .filter-card select {
-        width: 100%;
-        height: 36px;
-        background: #f0f0f2;
-        border: none;
-        border-radius: 8px;
-        padding: 0 12px;
-        font-size: 15px;
-        outline: none;
-    }
-
-    .documents-card {
-        background: white;
+    .form-control {
         border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        padding: 24px;
-        min-height: 240px;
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 14px;
+        min-width: 280px;
     }
 
     .documents-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
         gap: 18px;
     }
 
-    .document-item {
-        background: #f9fafb;
-        border-radius: 12px;
-        padding: 16px;
+    .document-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
     }
 
-    .document-item h3 {
+    .document-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .document-header h3 {
         margin: 0;
         font-size: 17px;
         color: #111827;
     }
 
-    .document-item p {
-        margin: 6px 0 0 0;
+    .document-header p {
+        margin: 4px 0 0 0;
         color: #667085;
         font-size: 14px;
     }
 
+    .document-type {
+        white-space: nowrap;
+        background: #eef2ff;
+        color: #3730a3;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
     .document-notes {
-        margin-top: 12px !important;
+        background: #f9fafb;
+        border-radius: 10px;
+        padding: 10px;
+        color: #374151;
+        font-size: 14px;
+        margin-bottom: 14px;
     }
 
-    .image-grid {
+    .document-images {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        margin-top: 14px;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 10px;
     }
 
-    .image-grid img {
+    .document-images a {
+        display: block;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+
+    .document-images img {
         width: 100%;
-        height: 80px;
+        height: 90px;
         object-fit: cover;
-        border-radius: 8px;
         display: block;
     }
 
     .no-images {
-        margin-top: 14px !important;
+        grid-column: 1 / -1;
+        color: #667085;
+        background: #f9fafb;
+        border-radius: 10px;
+        padding: 12px;
+        text-align: center;
         font-size: 14px;
-        color: #98a2b3 !important;
     }
 
-    .empty-state {
-        min-height: 240px;
+    .document-footer {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid #f1f5f9;
+        color: #667085;
+        font-size: 12px;
+    }
+
+    .empty-box {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        min-height: 260px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 10px;
+        text-align: center;
+        color: #667085;
     }
 
     .empty-icon {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        background: #f2f4f7;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 30px;
-        margin-bottom: 18px;
+        font-size: 42px;
     }
 
-    .empty-state h2 {
+    .empty-box h2 {
         margin: 0;
-        font-size: 20px;
         color: #111827;
-        font-weight: 500;
+        font-size: 20px;
     }
 
-    .empty-state p {
-        margin: 14px 0 26px 0;
-        color: #667085;
-        font-size: 17px;
+    .empty-box p {
+        margin: 0;
     }
 
     .empty-button {
-        background: #050516;
-        color: white;
-        padding: 10px 18px;
-        border-radius: 7px;
+        margin-top: 8px;
+        background: #020617;
+        color: #ffffff;
         text-decoration: none;
-        font-size: 15px;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
     }
 </style>
 

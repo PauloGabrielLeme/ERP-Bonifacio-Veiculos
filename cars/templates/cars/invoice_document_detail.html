@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>{{ invoice.title }}</h1>
+
+        <p>
+            {{ invoice.car.brand }} {{ invoice.car.model }} - {{ invoice.car.plate }}
+        </p>
+    </div>
+
+    <div class="header-actions">
+        {% if invoice.file %}
+            <a href="{{ invoice.file.url }}" class="secondary-action" download>
+                Baixar arquivo original
+            </a>
+        {% endif %}
+
+        <a href="{% url 'financial' %}?tab=invoices" class="secondary-action">
+            Voltar
+        </a>
+    </div>
+</div>
+
+<section class="invoice-reader">
+    <div class="reader-meta">
+        <span>{{ invoice.get_file_type_display }}</span>
+        <span>{{ invoice.created_at|date:"d/m/Y H:i" }}</span>
+        <span>{{ invoice.filename }}</span>
+    </div>
+
+    {% if readable_content %}
+        <div class="reader-content">
+            {{ readable_content|linebreaks }}
+        </div>
+    {% else %}
+        <div class="empty-box">
+            <div class="empty-icon">▣</div>
+            <p>Não foi possível exibir o conteúdo deste arquivo.</p>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 28px;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .page-header p {
+        margin: 6px 0 0 0;
+        color: #667085;
+        font-size: 17px;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .secondary-action {
+        background: #ffffff;
+        color: #111827;
+        text-decoration: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        border: 1px solid #e5e7eb;
+        white-space: nowrap;
+    }
+
+    .invoice-reader {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .reader-meta {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 14px 18px;
+        color: #667085;
+        font-size: 13px;
+    }
+
+    .reader-meta span {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+        padding: 4px 10px;
+    }
+
+    .reader-content {
+        padding: 28px;
+        color: #111827;
+        font-size: 16px;
+        line-height: 1.75;
+        max-width: 900px;
+    }
+
+    .reader-content p {
+        margin: 0 0 16px 0;
+    }
+
+    .empty-box {
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: #667085;
+    }
+
+    .empty-icon {
+        font-size: 42px;
+        color: #98a2b3;
+    }
+</style>
+
+{% endblock %}
