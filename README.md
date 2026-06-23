@@ -1,7 +1,7 @@
 
   # ERP para loja de carros
 
-  Este ERP tem o proósito de gerenciar carros que entram e saem de uma loja, registrando seus documentos, e informações do carro.
+  Este ERP tem o propósito de gerenciar veículos que entram e saem de uma loja, registrando seus documentos, e informações.
 
   # Como Configurar
 
